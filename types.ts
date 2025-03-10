@@ -19,6 +19,9 @@ export interface Message {
   createdAt: number;
   user: User;
   system?: boolean;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'file';
+  fileName?: string;
 }
 
 export interface GroupChat {

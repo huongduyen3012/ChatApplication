@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
   },
-
   emptyListContainer: {
     padding: 20,
     alignItems: 'center',
@@ -117,7 +116,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -149,7 +147,47 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
- 
+
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  // inputContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   padding: 10,
+  //   backgroundColor: '#fff',
+  //   borderTopWidth: 1,
+  //   borderColor: '#ddd',
+  // },
+  // input: {
+  //   flex: 1,
+  //   padding: 10,
+  //   borderRadius: 20,
+  //   backgroundColor: '#f0f0f0',
+  // },
+  iconButton: {
+    padding: 10,
+    marginRight: 5,
+  },
+  // sendButton: {
+  //   backgroundColor: '#007AFF',
+  //   padding: 10,
+  //   borderRadius: 20,
+  // },
+  uploadText: {
+    textAlign: 'center',
+    padding: 5,
+    color: '#007AFF',
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginTop: 5,
+    alignSelf: 'center',
+  },
 });
 
 export default styles;

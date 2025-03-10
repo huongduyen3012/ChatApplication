@@ -15,6 +15,7 @@ import {RegisterScreen} from './components/Login&Register/Register';
 import {ChatRoomScreen} from './components/ChatRoom';
 import {NewChatScreen} from './components/NewChat';
 import {SettingsScreen} from './components/Settings';
+import {Provider} from 'react-native-paper';
 
 type RootStackParamList = {
   Login: undefined;
@@ -78,37 +79,42 @@ function MainTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          options={{headerShown: false}}
-          name="Login"
-          component={LoginPage}
-        />
-        <Stack.Screen
-          options={{headerShown: false}}
-          name="Register"
-          component={RegisterScreen}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="ChatScreen"
-          component={ChatRoomScreen}
-          options={({route}) => ({title: route.params.name})}
-        />
-        <Stack.Screen name="NewChat" component={NewChatScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen
-          name="VideoCallScreen"
-          component={VideoCallScreen}
-          options={({route}) => ({title: route.params.channelName})}
-        />
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="Login"
+            component={LoginPage}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="Register"
+            component={RegisterScreen}
+          />
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="ChatScreen"
+            component={ChatRoomScreen}
+            options={({route}) => ({title: route.params.name})}
+          />
+          <Stack.Screen name="NewChat" component={NewChatScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen
+            name="VideoCallScreen"
+            component={VideoCallScreen}
+            options={({route}) => ({title: route.params.channelName})}
+          />
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }

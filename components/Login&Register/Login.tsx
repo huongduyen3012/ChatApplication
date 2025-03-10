@@ -1,4 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
+import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import React, {useState} from 'react';
 import {
   Alert,
@@ -10,15 +13,16 @@ import {
   View,
 } from 'react-native';
 import {Icon} from 'react-native-paper';
-import auth from '@react-native-firebase/auth';
-import database from '@react-native-firebase/database';
 import styles from './styles';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import { AccessToken, LoginManager } from 'react-native-fbsdk-next';
+import {GOOGLE_WEB_CLIENT_ID} from '@env';
 
 GoogleSignin.configure({
-  webClientId:
-    '194213890097-l2eldsgf42rujc4nv4ol5418ge4covga.apps.googleusercontent.com',
+  webClientId: GOOGLE_WEB_CLIENT_ID,
+  // offlineAccess: true,
+  // scopes: [
+  //   'https://www.googleapis.com/auth/userinfo.profile',
+  //   'https://www.googleapis.com/auth/userinfo.email',
+  // ],
 });
 
 const LoginPage = ({navigation}: any) => {
@@ -70,7 +74,12 @@ const LoginPage = ({navigation}: any) => {
 
       const signInResult = await GoogleSignin.signIn();
 
-      let idToken = signInResult.data?.idToken;
+      if (!signInResult.data) {
+        throw new Error('No user data found in signInResult');
+      }
+
+      // Try accessing the idToken from the user object
+      const idToken = signInResult.data.idToken;
       if (!idToken) {
         throw new Error('No ID token found in signInResult');
       }
@@ -85,36 +94,35 @@ const LoginPage = ({navigation}: any) => {
       Alert.alert('Success', 'Signed in with Google!');
 
       navigation.replace('MainTabs');
-
     } catch (error) {
       console.error('Google Sign-In Error:', error);
       Alert.alert('Error', 'Something went wrong');
     }
   };
-  const onFacebookButtonPress = async () => {
-    try {
-      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-      if (result.isCancelled) {
-        Alert.alert('Cancelled', 'Facebook login was cancelled');
-        return;
-      }
+  // const onFacebookButtonPress = async () => {
+  //   try {
+  //     const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+  //     if (result.isCancelled) {
+  //       Alert.alert('Cancelled', 'Facebook login was cancelled');
+  //       return;
+  //     }
 
-      const data = await AccessToken.getCurrentAccessToken();
-      if (!data) {
-        throw new Error('Something went wrong obtaining access token');
-      }
+  //     const data = await AccessToken.getCurrentAccessToken();
+  //     if (!data) {
+  //       throw new Error('Something went wrong obtaining access token');
+  //     }
 
-      const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
-      const userCredential = await auth().signInWithCredential(facebookCredential);
+  //     const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+  //     const userCredential = await auth().signInWithCredential(facebookCredential);
 
-      console.log('Signed in with Facebook:', userCredential.user);
-      Alert.alert('Success', 'Signed in with Facebook!');
-      navigation.replace('MainTabs');
-    } catch (error) {
-      console.error('Facebook Sign-In Error:', error);
-      Alert.alert('Error', 'Facebook Sign-In failed');
-    }
-  };
+  //     console.log('Signed in with Facebook:', userCredential.user);
+  //     Alert.alert('Success', 'Signed in with Facebook!');
+  //     navigation.replace('MainTabs');
+  //   } catch (error) {
+  //     console.error('Facebook Sign-In Error:', error);
+  //     Alert.alert('Error', 'Facebook Sign-In failed');
+  //   }
+  // };
 
   return (
     <ScrollView
@@ -226,11 +234,11 @@ const LoginPage = ({navigation}: any) => {
                 onPress={onGoogleButtonPress}>
                 <Icon source="google" color="white" size={30} />
               </TouchableOpacity>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[styles.inBut2, {backgroundColor: '#4267B2'}]}
                 onPress={onFacebookButtonPress}>
                 <Icon source="facebook" color="white" size={30} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </View>
