@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Icon } from 'react-native-paper';
 import styles from './styles';
+import theme from '../../constants/Theme';
 
 export const RegisterScreen = ({navigation}: any) => {
   const [username, setUsername] = useState('');
@@ -53,7 +54,6 @@ export const RegisterScreen = ({navigation}: any) => {
       const userCredential = await auth().createUserWithEmailAndPassword(email, password);
       const userId = userCredential.user.uid;
 
-      // Create user data in the database
       await database().ref(`/users/${userId}`).set({
         username,
         email,
@@ -61,7 +61,6 @@ export const RegisterScreen = ({navigation}: any) => {
         createdAt: new Date().toISOString(),
       });
 
-      // Update user profile
       await userCredential.user.updateProfile({
         displayName: username,
       });
@@ -80,7 +79,7 @@ export const RegisterScreen = ({navigation}: any) => {
       contentContainerStyle={{flexGrow: 1}}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps={'always'}
-      style={{backgroundColor: 'white'}}>
+      style={styles.container}>
       <View>
         <View style={styles.logoContainer}>
           <Image
@@ -89,32 +88,33 @@ export const RegisterScreen = ({navigation}: any) => {
           />
         </View>
         <View style={styles.loginContainer}>
-          <Text style={styles.text_header}>Register</Text>
+          <Text style={styles.headerText}>Create Account</Text>
 
-          <View style={styles.action}>
-            <Icon source="account" color="#420475" size={24} />
+          <View style={styles.inputContainer}>
+            <Icon source="account" color={theme.primary} size={24} />
             <TextInput
               placeholder="Enter Username"
               style={styles.textInput}
               onChangeText={setUsername}
               value={username}
+              placeholderTextColor={theme.textSecondary}
             />
             {username.length > 0 && (
               <Icon
                 source={username.length >= 3 ? 'check-circle' : 'close-circle'}
-                color={username.length >= 3 ? '#00C853' : '#FF3B30'}
+                color={username.length >= 3 ? theme.success : theme.error}
                 size={24}
               />
             )}
           </View>
           {username.length > 0 && username.length < 3 && (
-            <Text style={{marginLeft: 10, color: 'red'}}>
+            <Text style={styles.errorText}>
               Username must be at least 3 characters
             </Text>
           )}
 
-          <View style={styles.action}>
-            <Icon source="email" color="#420475" size={24} />
+          <View style={styles.inputContainer}>
+            <Icon source="email" color={theme.primary} size={24} />
             <TextInput
               placeholder="Enter Email"
               style={styles.textInput}
@@ -122,49 +122,51 @@ export const RegisterScreen = ({navigation}: any) => {
               value={email}
               keyboardType="email-address"
               autoCapitalize="none"
+              placeholderTextColor={theme.textSecondary}
             />
             {email.length > 0 && (
               <Icon
                 source={isValidEmail(email) ? 'check-circle' : 'close-circle'}
-                color={isValidEmail(email) ? '#00C853' : '#FF3B30'}
+                color={isValidEmail(email) ? theme.success : theme.error}
                 size={24}
               />
             )}
           </View>
           {!isValidEmail(email) && email.length > 0 && (
-            <Text style={{marginLeft: 20, color: 'red'}}>
-              Enter a valid email
+            <Text style={styles.errorText}>
+              Enter a valid email address
             </Text>
           )}
 
-          <View style={styles.action}>
-            <Icon source="lock" color="#420475" size={24} />
+          <View style={styles.inputContainer}>
+            <Icon source="lock" color={theme.primary} size={24} />
             <TextInput
               placeholder="Enter Password"
               style={styles.textInput}
               onChangeText={setPassword}
               value={password}
               secureTextEntry={!showPassword}
+              placeholderTextColor={theme.textSecondary}
             />
             {password.length > 0 && (
               <Icon
                 source={
                   isValidPassword(password) ? 'check-circle' : 'close-circle'
                 }
-                color={isValidPassword(password) ? '#00C853' : '#FF3B30'}
+                color={isValidPassword(password) ? theme.success : theme.error}
                 size={24}
               />
             )}
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon
                 source={showPassword ? 'eye' : 'eye-off'}
-                color="#420475"
+                color={theme.primary}
                 size={23}
               />
             </TouchableOpacity>
           </View>
           {!isValidPassword(password) && password.length > 0 && (
-            <Text style={{marginLeft: 20, color: 'red'}}>
+            <Text style={styles.errorText}>
               Password must contain uppercase, lowercase, number, and be 6+
               characters long
             </Text>
@@ -173,21 +175,21 @@ export const RegisterScreen = ({navigation}: any) => {
 
         <View style={styles.button}>
           <TouchableOpacity
-            style={styles.inBut}
+            style={[
+              styles.inBut, 
+              loading && styles.disabledButton
+            ]}
             onPress={handleSubmit}
             disabled={loading}>
-            <View>
-              <Text style={styles.textSign}>
-                {loading ? 'Registering...' : 'Register'}
-              </Text>
-            </View>
+            <Text style={styles.textSign}>
+              {loading ? 'Registering...' : 'Create Account'}
+            </Text>
           </TouchableOpacity>
 
-          <View
-            style={{flexDirection: 'row', marginTop: 20, alignItems: 'center'}}>
-            <Text style={{color: '#666'}}>Already have an account? </Text>
+          <View style={styles.linkTextContainer}>
+            <Text style={styles.normalText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={{color: '#420475', fontWeight: '600'}}>Sign in</Text>
+              <Text style={styles.linkText}>Sign in</Text>
             </TouchableOpacity>
           </View>
         </View>

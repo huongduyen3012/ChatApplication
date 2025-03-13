@@ -1,21 +1,24 @@
 /* eslint-disable react/no-unstable-nested-components */
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import React from 'react';
-import HomeScreen from './components/HomeScreen';
-import LoginPage from './components/Login&Register/Login';
-
+import {Provider} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {ChatRoomScreen} from './components/ChatRoom';
+import {ChatInfoScreen} from './components/ChatRoom/ChatInformation';
+import {MemberList} from './components/ChatRoom/MemberList';
 import ContactScreen from './components/Contact';
 import VideoCallScreen from './components/Contact/VideoCallScreen';
+import HomeScreen from './components/HomeScreen';
 import ForgotPasswordScreen from './components/Login&Register/ForgotPassword';
-import {UserProfileScreen} from './components/UserProfile';
+import LoginPage from './components/Login&Register/Login';
 import {RegisterScreen} from './components/Login&Register/Register';
-import {ChatRoomScreen} from './components/ChatRoom';
 import {NewChatScreen} from './components/NewChat';
 import {SettingsScreen} from './components/Settings';
-import {Provider} from 'react-native-paper';
+import {UserProfileScreen} from './components/UserProfile';
+import {EditProfileScreen} from './components/UserProfile/EditProfile';
+import Colors from './constants/Colors';
 
 type RootStackParamList = {
   Login: undefined;
@@ -34,16 +37,24 @@ type RootStackParamList = {
     onEndCall: () => void;
   };
   ForgotPassword: undefined;
+  ChatInfo: undefined;
+  EditProfile: undefined;
+  MemberList: {
+    members: [];
+    isGroupAdmin?: boolean;
+    onRemoveMember?: (userId: string) => void;
+  };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
+  const theme = Colors.getTheme('light');
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#0084ff',
+        tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: 'gray',
       }}>
       <Tab.Screen
@@ -53,6 +64,9 @@ function MainTabs() {
           tabBarIcon: ({color, size}) => (
             <Icon name="home" size={size} color={color} />
           ),
+          headerStyle: {backgroundColor: theme.primary},
+          headerTintColor: '#fff',
+          title: 'Home',
         }}
       />
       <Tab.Screen
@@ -62,6 +76,8 @@ function MainTabs() {
           tabBarIcon: ({color, size}) => (
             <Icon name="contacts" size={size} color={color} />
           ),
+          headerStyle: {backgroundColor: theme.primary},
+          headerTintColor: '#fff',
         }}
       />
       <Tab.Screen
@@ -71,6 +87,8 @@ function MainTabs() {
           tabBarIcon: ({color, size}) => (
             <Icon name="account" size={size} color={color} />
           ),
+          headerStyle: {backgroundColor: theme.primary},
+          headerTintColor: '#fff',
         }}
       />
     </Tab.Navigator>
@@ -78,10 +96,16 @@ function MainTabs() {
 }
 
 export default function App() {
+  const theme = Colors.getTheme('light');
   return (
     <Provider>
       <NavigationContainer>
-        <Stack.Navigator>
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{
+            headerStyle: {backgroundColor: theme.primary},
+            headerTintColor: '#fff',
+          }}>
           <Stack.Screen
             options={{headerShown: false}}
             name="Login"
@@ -102,7 +126,11 @@ export default function App() {
             component={ChatRoomScreen}
             options={({route}) => ({title: route.params.name})}
           />
-          <Stack.Screen name="NewChat" component={NewChatScreen} />
+          <Stack.Screen
+            name="NewChat"
+            component={NewChatScreen}
+            options={{title: 'New Chat'}}
+          />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen
             name="VideoCallScreen"
@@ -112,6 +140,19 @@ export default function App() {
           <Stack.Screen
             name="ForgotPassword"
             component={ForgotPasswordScreen}
+          />
+          <Stack.Screen name="ChatInfo" component={ChatInfoScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen
+            component={MemberList}
+            name="MemberList"
+            options={() => ({
+              title: 'Group Members',
+              headerStyle: {
+                backgroundColor: theme.primary,
+              },
+              headerTintColor: '#fff',
+            })}
           />
         </Stack.Navigator>
       </NavigationContainer>

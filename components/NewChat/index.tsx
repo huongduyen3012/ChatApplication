@@ -1,21 +1,23 @@
+/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react-native/no-inline-styles */
+import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import React, {useEffect, useState} from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  TextInput,
+  FlatList,
   ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {Avatar, Searchbar} from 'react-native-paper';
-import database from '@react-native-firebase/database';
-import auth from '@react-native-firebase/auth';
-import styles from './styles';
+import {Avatar, Divider, Searchbar, TextInput} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/Ionicons';
+import theme from '../../constants/Theme';
 import {User} from '../../types';
 import {MockUsers} from './helpers';
+import styles from './styles';
 
 export const NewChatScreen = ({navigation}: {navigation: any}) => {
   const [users, setUsers] = useState<User[]>([]);
@@ -25,6 +27,16 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [groupName, setGroupName] = useState('');
   const currentUser = auth().currentUser;
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: isGroupChat ? 'Create Group Chat' : 'New Chat',
+      headerStyle: {
+        backgroundColor: theme.primary,
+      },
+      headerTintColor: '#fff',
+    });
+  }, [isGroupChat, navigation]);
 
   useEffect(() => {
     const usersRef = database().ref('users');
@@ -107,7 +119,10 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
       );
 
       if (existingChat) {
-        navigation.navigate('ChatScreen', {chatId: existingChat[0]});
+        navigation.navigate('ChatScreen', {
+          chatId: existingChat[0],
+          name: selectedUser.name,
+        });
         return;
       }
 
@@ -135,7 +150,10 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
       };
 
       await newChatRef.set(chatData);
-      navigation.navigate('ChatScreen', {chatId: newChatRef.key});
+      navigation.navigate('ChatScreen', {
+        chatId: newChatRef.key,
+        name: selectedUser.name,
+      });
     } catch (error) {
       console.error('Error creating chat:', error);
     }
@@ -189,9 +207,13 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
       };
 
       await newChatRef.set(chatData);
-      navigation.navigate('ChatScreen', {chatId: newChatRef.key});
+      navigation.navigate('ChatScreen', {
+        chatId: newChatRef.key,
+        name: groupName,
+      });
     } catch (error) {
       console.error('Error creating group chat:', error);
+      Alert.alert('Error', 'Failed to create group chat');
     }
   };
 
@@ -216,7 +238,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
       }>
       <Avatar.Image
         size={50}
-        source={{uri: item.imageUrl}}
+        source={{uri: item.imageUrl || 'https://via.placeholder.com/50'}}
         style={styles.avatar}
       />
       <View style={styles.userInfo}>
@@ -224,90 +246,177 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
         <Text style={styles.userEmail}>{item.email}</Text>
       </View>
       {isGroupChat && selectedUsers.some(u => u.id === item.id) && (
-        <Icon source="check-circle" size={24} color="#420475" />
+        <Icon name="checkmark-circle" size={24} color={theme.primary} />
       )}
     </TouchableOpacity>
   );
 
+  const filteredUsers = users.filter(
+    user =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   if (loading) {
-    return <ActivityIndicator size="large" color="#420475" />;
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.background,
+        }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{marginTop: 16, color: theme.textSecondary}}>
+          Loading contacts...
+        </Text>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.chatTypeButton, !isGroupChat && styles.activeButton]}
-          onPress={() => {
-            setIsGroupChat(false);
-            setSelectedUsers([]);
-            setGroupName('');
-          }}>
-          <Text style={[styles.buttonText, !isGroupChat && styles.activeText]}>
-            Individual
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.chatTypeButton, isGroupChat && styles.activeButton]}
-          onPress={() => setIsGroupChat(true)}>
-          <Text style={[styles.buttonText, isGroupChat && styles.activeText]}>
-            Group
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {!isGroupChat ? (
+        <>
+          <View style={styles.searchContainer}>
+            <Searchbar
+              placeholder="Search users..."
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              style={styles.searchBar}
+              inputStyle={{color: theme.text}}
+              placeholderTextColor={theme.textSecondary}
+              iconColor={theme.primary}
+            />
 
-      {isGroupChat && (
-        <View style={styles.groupNameContainer}>
-          <TextInput
-            style={styles.groupNameInput}
-            placeholder="Enter group name"
-            value={groupName}
-            onChangeText={setGroupName}
+            <TouchableOpacity
+              style={styles.createGroupChatButton}
+              onPress={() => setIsGroupChat(true)}>
+              <View style={styles.createGroupButtonContent}>
+                <Icon name="people" size={20} color={theme.primary} />
+                <Text style={styles.createGroupChatText}>
+                  Create a group chat instead
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={filteredUsers}
+            renderItem={renderUserItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{paddingBottom: 20}}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <Icon
+                  name="search"
+                  size={70}
+                  color={`${theme.textSecondary}80`}
+                />
+                <Text style={styles.emptyStateText}>
+                  {searchQuery.length > 0
+                    ? 'No users found matching your search'
+                    : 'No contacts available'}
+                </Text>
+              </View>
+            )}
           />
-          <TouchableOpacity
-            style={[
-              styles.createGroupButton,
-              (!groupName.trim() || selectedUsers.length < 2) &&
-                styles.disabledButton,
-            ]}
-            onPress={createGroupChat}
-            disabled={!groupName.trim() || selectedUsers.length < 2}>
-            <Text style={styles.createGroupButtonText}>Create Group</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        </>
+      ) : (
+        <>
+          <View style={styles.groupModeHeader}>
+            <View style={styles.groupNameContainer}>
+              <TextInput
+                label="Group Name"
+                placeholder="Enter a name for your group"
+                style={styles.groupNameInput}
+                value={groupName}
+                onChangeText={setGroupName}
+                placeholderTextColor={theme.textSecondary}
+              />
 
-      <Searchbar
-        placeholder="Search users..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-        style={styles.searchBar}
-      />
+              {selectedUsers.length > 0 && (
+                <View style={styles.selectedUsersContainer}>
+                  <Text style={styles.selectedUsersTitle}>
+                    Selected ({selectedUsers.length}):
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {selectedUsers.map(user => (
+                      <View key={user.id} style={styles.selectedUserChip}>
+                        <Text style={styles.selectedUserName}>{user.name}</Text>
+                        <TouchableOpacity
+                          onPress={() => toggleUserSelection(user)}>
+                          <Icon name="close-circle" size={20} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
-      {isGroupChat && selectedUsers.length > 0 && (
-        <View style={styles.selectedUsersContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {selectedUsers.map(user => (
-              <View key={user.id} style={styles.selectedUserChip}>
-                <Text style={styles.selectedUserName}>{user.name}</Text>
-                <TouchableOpacity onPress={() => toggleUserSelection(user)}>
-                  <Icon source="close" size={20} color="#666" />
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.cancelGroupButton}
+                  onPress={() => {
+                    setIsGroupChat(false);
+                    setSelectedUsers([]);
+                    setGroupName('');
+                  }}>
+                  <Text style={styles.cancelGroupButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.createGroupButton,
+                    (!groupName.trim() || selectedUsers.length < 2) &&
+                      styles.disabledButton,
+                  ]}
+                  onPress={createGroupChat}
+                  disabled={!groupName.trim() || selectedUsers.length < 2}>
+                  <Text style={styles.createGroupButtonText}>
+                    {selectedUsers.length < 2
+                      ? `Need ${2 - selectedUsers.length} more`
+                      : 'Create Group'}
+                  </Text>
                 </TouchableOpacity>
               </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+            </View>
 
-      <FlatList
-        data={users.filter(
-          user =>
-            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchQuery.toLowerCase()),
-        )}
-        renderItem={renderUserItem}
-        keyExtractor={item => item.id}
-      />
+            <Divider style={styles.divider} />
+
+            <Searchbar
+              placeholder="Search users to add"
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              style={[styles.searchBar, {margin: 10}]}
+              inputStyle={{color: theme.text}}
+              placeholderTextColor={theme.textSecondary}
+              iconColor={theme.primary}
+            />
+          </View>
+
+          <FlatList
+            data={filteredUsers}
+            renderItem={renderUserItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{paddingBottom: 20}}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <Icon
+                  name="search"
+                  size={70}
+                  color={`${theme.textSecondary}80`}
+                />
+                <Text style={styles.emptyStateText}>
+                  {searchQuery.length > 0
+                    ? 'No users found matching your search'
+                    : 'No contacts available'}
+                </Text>
+              </View>
+            )}
+          />
+        </>
+      )}
     </View>
   );
 };

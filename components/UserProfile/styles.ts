@@ -1,9 +1,10 @@
 import {StyleSheet} from 'react-native';
+import theme from '../../constants/Theme';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.background,
   },
   profileHeader: {
     alignItems: 'center',
@@ -18,24 +19,33 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
+    borderWidth: 3,
+    borderColor: theme.border,
   },
   editIconContainer: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#0084ff',
+    backgroundColor: theme.primary,
     borderRadius: 12,
     padding: 6,
+    // Add subtle shadow
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: theme.primary,
     marginBottom: 5,
     textAlign: 'center',
   },
   email: {
     fontSize: 16,
-    color: '#666',
+    color: theme.textSecondary,
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -45,7 +55,8 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: theme.border,
+    backgroundColor: theme.surface,
   },
   statItem: {
     alignItems: 'center',
@@ -53,27 +64,24 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: theme.text,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
+    color: theme.textSecondary,
     marginTop: 5,
   },
-  section: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
+
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    padding: 10,
   },
   menuItemText: {
     marginLeft: 10,
     fontSize: 16,
     flex: 1,
+    color: theme.text,
   },
   menuItemArrow: {
     opacity: 0.3,

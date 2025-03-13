@@ -5,6 +5,7 @@ import moment from 'moment';
 import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Text,
   TextInput,
@@ -15,6 +16,7 @@ import {Avatar, FAB, IconButton} from 'react-native-paper';
 import {Chat, User} from '../types';
 import {generateMockChats} from './helpers';
 import styles from './styles';
+import theme from '../constants/Theme';
 
 const HomeScreen = ({navigation}: {navigation: any}) => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -109,10 +111,68 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
     setFilteredChats(filtered);
   }, [searchQuery, chats, currentUser?.uid]);
 
+  const handleDeleteChat = (
+    chatId: string,
+    chatName: string,
+    isGroup: boolean,
+  ) => {
+    Alert.alert(
+      'Delete Chat',
+      `Are you sure you want to delete ${
+        isGroup ? 'this group chat' : 'this conversation'
+      }? ${isGroup ? 'This will only remove it from your list.' : ''}`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (!isGroup) {
+                await database().ref(`chats/${chatId}`).remove();
+
+                await database().ref(`messages/${chatId}`).remove();
+
+                console.log(`Deleted chat: ${chatId}`);
+              } else {
+                await database()
+                  .ref(`chats/${chatId}/members/${currentUser?.uid}`)
+                  .remove();
+
+                const messagesRef = database().ref(`messages/${chatId}`).push();
+                await messagesRef.set({
+                  content: `${
+                    currentUser?.displayName || 'A user'
+                  } has left the group`,
+                  createdAt: database.ServerValue.TIMESTAMP,
+                  system: true,
+                  user: {
+                    _id: 'system',
+                    name: 'System',
+                    imageUrl: '',
+                  },
+                });
+
+                console.log(`Left group chat: ${chatId}`);
+              }
+            } catch (error) {
+              console.error('Error deleting chat:', error);
+              Alert.alert('Error', 'Failed to delete chat. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const renderChatItem = ({item}: {item: Chat}) => {
     if (item.type === 'group') {
       return (
         <TouchableWithoutFeedback
+          onLongPress={() => handleDeleteChat(item._id, item.name || 'Group Chat', true)}
           onPress={() =>
             navigation.navigate('ChatScreen', {
               chatId: item._id,
@@ -135,7 +195,7 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
                 />
               </View>
               <View style={styles.midContainer}>
-                <Text style={[styles.username, {color: '#420475'}]}>
+                <Text style={[styles.username, {color: theme.primary}]}>
                   {item.name}
                 </Text>
                 <Text
@@ -162,6 +222,9 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
     }
     return (
       <TouchableWithoutFeedback
+        onLongPress={() =>
+          handleDeleteChat(item._id, otherUser?.name || 'Chat', false)
+        }
         onPress={() => {
           navigation.navigate('ChatScreen', {
             chatId: item._id,
@@ -177,18 +240,18 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
                 source={{uri: otherUser?.imageUrl}}
                 style={{
                   borderWidth: 2,
-                  borderColor: '#fff',
-                  backgroundColor: '#f0f0f0',
+                  borderColor: theme.surface,
+                  backgroundColor: theme.background,
                 }}
               />
             </View>
             <View style={styles.midContainer}>
-              <Text style={[styles.username, {color: '#420475'}]}>
+              <Text style={[styles.username, {color: theme.primary}]}>
                 {otherUser?.name || 'Unknown User'}
               </Text>
               <Text
                 numberOfLines={2}
-                style={[styles.lastMessage, {color: '#666'}]}>
+                style={[styles.lastMessage, {color: theme.textSecondary}]}>
                 {item.lastMessage}
               </Text>
             </View>
@@ -204,42 +267,32 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
   if (loading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size="large" color="#420475" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.mainContainer, {backgroundColor: '#f5f5f5'}]}>
-      <View
-        style={[
-          styles.searchContainer,
-          {
-            margin: 15,
-            backgroundColor: 'white',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#e0e0e0',
-          },
-        ]}>
+    <View style={[styles.mainContainer, {backgroundColor: theme.background}]}>
+      <View style={styles.searchContainer}>
         <IconButton
           icon="magnify"
           size={24}
-          iconColor="#420475"
+          iconColor={theme.primary}
           style={styles.searchIcon}
         />
         <TextInput
-          style={[styles.searchInput, {color: '#333'}]}
+          style={[styles.searchInput, {color: theme.text}]}
           placeholder="Search chats..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor="#666"
+          placeholderTextColor={theme.textSecondary}
         />
         {searchQuery.length > 0 && (
           <IconButton
             icon="close"
             size={20}
-            iconColor="#666"
+            iconColor={theme.textSecondary}
             onPress={() => setSearchQuery('')}
           />
         )}
@@ -257,7 +310,7 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
         style={{flex: 1}}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, {color: '#666'}]}>
+            <Text style={[styles.emptyText, {color: theme.textSecondary}]}>
               {searchQuery.length > 0
                 ? 'No chats found matching your search'
                 : 'No chats yet. Start a new conversation!'}
@@ -268,13 +321,7 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
 
       <FAB
         icon="plus"
-        style={[
-          styles.fab,
-          {
-            backgroundColor: '#420475',
-            borderRadius: 16,
-          },
-        ]}
+        style={[styles.fab]}
         onPress={() => navigation.navigate('NewChat')}
         color="white"
       />

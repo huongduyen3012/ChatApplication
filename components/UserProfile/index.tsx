@@ -1,25 +1,29 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
-import styles from './styles';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import {useNavigation} from '@react-navigation/native';
-import { BaseUser } from '../../types';
+import React, {useEffect, useState} from 'react';
+import {Alert, Image, Text, TouchableOpacity, View} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {BaseUser} from '../../types';
+import styles from './styles';
 
-export function UserProfileScreen() {
+export function UserProfileScreen({navigation}: any) {
   const [userData, setUserData] = useState<BaseUser | null>(null);
-  const navigation = useNavigation();
   const currentUser = auth().currentUser;
 
   useEffect(() => {
     if (currentUser) {
       const userRef = database().ref(`users/${currentUser.uid}`);
-      userRef.once('value').then(snapshot => {
+      const onValueChange = userRef.on('value', snapshot => {
         if (snapshot.exists()) {
-          setUserData(snapshot.val());
+          const data = snapshot.val();
+          console.log('User data updated:', data);
+          setUserData(data);
         }
       });
+
+      return () => {
+        userRef.off('value', onValueChange);
+      };
     }
   }, [currentUser]);
 
@@ -27,17 +31,17 @@ export function UserProfileScreen() {
     {
       icon: 'cog-outline',
       title: 'Settings',
-      onPress: () => navigation.navigate('Settings' as never),
+      onPress: () => navigation.navigate('Settings'),
     },
     {
       icon: 'account-group-outline',
       title: 'Friends',
-      onPress: () => navigation.navigate('Friends' as never),
+      onPress: () => Alert.alert('Coming Soon', 'This feature is coming soon!'),
     },
     {
       icon: 'image-multiple-outline',
       title: 'Media & Files',
-      onPress: () => navigation.navigate('Media' as never),
+      onPress: () => Alert.alert('Coming Soon', 'This feature is coming soon!'),
     },
   ];
 
@@ -46,7 +50,7 @@ export function UserProfileScreen() {
       <View style={styles.profileHeader}>
         <TouchableOpacity
           style={styles.editAvatarContainer}
-          onPress={() => navigation.navigate('EditProfile' as never)}>
+          onPress={() => navigation.navigate('EditProfile')}>
           <Image
             source={{
               uri: userData?.imageUrl || 'https://via.placeholder.com/120',
@@ -76,7 +80,7 @@ export function UserProfileScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
+      <View>
         {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}

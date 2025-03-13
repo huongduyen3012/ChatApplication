@@ -1,120 +1,186 @@
 import {StyleSheet} from 'react-native';
+import theme from '../../constants/Theme';
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    backgroundColor: 'white',
+  container: {
+    flex: 1,
+    backgroundColor: theme.background,
   },
-  textSign: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  smallIcon: {
-    marginRight: 10,
-    fontSize: 24,
+  loginContainer: {
+    paddingHorizontal: 25,
+    paddingTop: 10,
+    paddingBottom: 30,
   },
   logoContainer: {
-    justifyContent: 'center',
+    marginTop: 30,
+    marginBottom: 20,
     alignItems: 'center',
   },
   logo: {
-    height: 200,
-    width: 200,
-    marginTop: 40,
+    width: 120,
+    height: 120,
   },
-  text_footer: {
-    color: '#05375a',
-    fontSize: 18,
+  headerText: {
+    fontSize: 30,
+    fontWeight: '700',
+    marginBottom: 30,
+    color: theme.primary,
+    textAlign: 'center',
   },
-  action: {
+  text_header: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: theme.primary,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    backgroundColor: '#f8f8f8',
-    marginBottom: 15,
+    width: '100%',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    marginBottom: 20,
+    backgroundColor: '#F8FAFD',
+    alignItems: 'center',
+    height: 55,
+    paddingHorizontal: 15,
+  },
+
+  iconContainer: {
+    marginRight: 10,
   },
   textInput: {
     flex: 1,
+    height: '100%',
+    color: theme.text,
+    fontSize: 16,
+    paddingVertical: 10,
     paddingLeft: 10,
-    color: '#333',
   },
-  loginContainer: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 25,
-    paddingVertical: 35,
-    flex: 1,
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 25,
   },
-  header: {
-    justifyContent: 'flex-end',
-    paddingHorizontal: 10,
+  forgotPasswordText: {
+    color: theme.primary,
+    fontWeight: '600',
+    fontSize: 14,
   },
-  text_header: {
-    color: '#420475',
-    fontWeight: 'bold',
-    fontSize: 30,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-
   button: {
     alignItems: 'center',
-    marginTop: -20,
-    // alignItems: 'center',
-    textAlign: 'center',
-    margin: 20,
+    marginTop: 20,
+    paddingHorizontal: 25,
+    paddingBottom: 30,
   },
   inBut: {
     width: '100%',
-    backgroundColor: '#420475',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  inBut2: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
+    height: 55,
+    backgroundColor: theme.primary,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: theme.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  bottomButton: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  smallIcon2: {
-    fontSize: 40,
-    marginRight: 10,
-  },
-  bottomText: {
-    color: 'black',
-    fontSize: 12,
+  textSign: {
+    fontSize: 18,
     fontWeight: '600',
-    marginTop: 5,
+    color: 'white',
   },
-  radioButton_div: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  radioButton_inner_div: {
-    display: 'flex',
-    flexDirection: 'row',
+  loginButton: {
+    backgroundColor: theme.primary,
+    width: '100%',
+    height: 55,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 30,
+    shadowColor: theme.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  radioButton_title: {
-    fontSize: 20,
-    color: '#420475',
+  loginButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
-  radioButton_text: {
-    fontSize: 16,
-    color: 'black',
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 25,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.border,
+  },
+  dividerText: {
+    color: theme.textSecondary,
+    paddingHorizontal: 15,
+    fontSize: 14,
+  },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    height: 50,
+    width: '48%',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  socialButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  registerButton: {
+    backgroundColor: theme.secondary,
+  },
+  googleButton: {
+    backgroundColor: '#DB4437',
+  },
+  errorText: {
+    color: theme.error,
+    fontSize: 12,
+    marginLeft: 15,
+    marginTop: -10,
+    marginBottom: 10,
+  },
+  validationIcon: {
+    marginLeft: 5,
+  },
+  linkTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  linkText: {
+    color: theme.primary,
+    fontWeight: '600',
+  },
+  normalText: {
+    color: theme.textSecondary,
+  },
+  // New style for disabled button
+  disabledButton: {
+    backgroundColor: theme.border,
+    opacity: 0.7,
   },
 });
+
 export default styles;

@@ -2,16 +2,12 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable react-native/no-inline-styles */
 import auth from '@react-native-firebase/auth';
-import database from '@react-native-firebase/database';
-import {
-  NavigationProp,
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import database, {DataSnapshot} from '@react-native-firebase/database';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import moment from 'moment';
 import React, {useEffect, useRef, useState} from 'react';
 import {
+  Alert,
   FlatList,
   Image,
   ImageBackground,
@@ -36,16 +32,8 @@ import {
 } from 'react-native-paper';
 import {ChatParticipant, Message} from '../../types';
 import {AddMemberModal} from './AddMemberModal';
-import {uploadBase64} from './helpers';
-import {MemberList} from './MemberList';
+import {ChatRoomRouteProp, NavigationType, uploadBase64} from './helpers';
 import styles from './styles';
-
-type RootStackParamList = {
-  ChatRoom: {chatId: string; name: string};
-};
-
-type ChatRoomRouteProp = RouteProp<RootStackParamList, 'ChatRoom'>;
-type NavigationType = NavigationProp<RootStackParamList>;
 
 export function ChatRoomScreen() {
   const route = useRoute<ChatRoomRouteProp>();
@@ -61,6 +49,7 @@ export function ChatRoomScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [chatInfo, setChatInfo] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [addMemberModalVisible, setAddMemberModalVisible] = useState(false);
 
   useEffect(() => {
     const chatRef = database().ref(`chats/${chatId}`);
@@ -98,29 +87,32 @@ export function ChatRoomScreen() {
       headerRight: () => (
         <View style={{flexDirection: 'row'}}>
           {isGroupChat && (
-            <IconButton
-              icon="account-plus"
-              onPress={() => {
-                <AddMemberModal chatId={chatId} participants={participants} />;
-              }}
-            />
-          )}
+          <IconButton
+            icon="account-plus"
+            iconColor="#fff"
+            onPress={() => setAddMemberModalVisible(true)}
+          />
+        )}
           <Menu
             visible={menuVisible}
             onDismiss={() => setMenuVisible(false)}
             anchor={
               <IconButton
                 icon="dots-vertical"
+                iconColor="#fff"
                 onPress={() => setMenuVisible(true)}
               />
             }>
             <Menu.Item
               onPress={() => {
                 setMenuVisible(false);
-                <MemberList participants={participants} />;
+                navigation.navigate('ChatInfo', {
+                  chatId,
+                  isGroupChat,
+                });
               }}
-              title="View Members"
-              leadingIcon="account-group"
+              title={isGroupChat ? 'Group Info' : 'Chat Info'}
+              leadingIcon="information"
             />
             <Divider />
           </Menu>
@@ -135,7 +127,6 @@ export function ChatRoomScreen() {
 
   const sendMessage = async () => {
     if (newMessage.trim().length === 0) {
-      // await uploadBase64('', 'text', '', chatId, newMessage, setIsUploading);
       return;
     }
 
@@ -164,6 +155,54 @@ export function ChatRoomScreen() {
     });
 
     setNewMessage('');
+  };
+
+  const deleteMessaage = async (messageId: string, userId: string) => {
+    if (currentUser?.uid !== userId) {
+      Alert.alert('Error', 'You are not allowed to delete this message');
+      return;
+    }
+
+    Alert.alert(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            try {
+              await database().ref(`messages/${chatId}/${messageId}`).remove();
+
+              const latestMessageSnapshot = await database()
+                .ref(`messages/${chatId}`)
+                .orderByChild('createdAt')
+                .limitToLast(1)
+                .once('value');
+
+              let newLastMessage = 'No messages';
+
+              latestMessageSnapshot.forEach((child: DataSnapshot) => {
+                const msg = child.val();
+                newLastMessage = msg.mediaUrl
+                  ? `[${msg.mediaType === 'image' ? 'Image' : 'File'}]`
+                  : msg.content;
+                return undefined;
+              });
+              await database().ref(`chats/${chatId}`).update({
+                lastMessage: newLastMessage,
+                timestamp: database.ServerValue.TIMESTAMP,
+              });
+            } catch (error) {
+              console.log('Error delete message', error);
+            }
+          },
+        },
+      ],
+    );
   };
   const handleSelectImage = async () => {
     try {
@@ -225,55 +264,62 @@ export function ChatRoomScreen() {
           <Text style={styles.systemMessageText}>{item.content}</Text>
         </View>
       ) : (
-        <View
-          style={[
-            styles.messageRow,
-            {
-              justifyContent: isMyMessage(item.user.id)
-                ? 'flex-end'
-                : 'flex-start',
-            },
-          ]}>
-          {!isMyMessage(item.user.id) && (
-            <Avatar.Image
-              size={40}
-              source={{
-                uri:
-                  participants[item.user.id]?.imageUrl ||
-                  item.user.imageUrl ||
-                  'https://via.placeholder.com/40',
-              }}
-              style={styles.avatar}
-            />
-          )}
+        <TouchableOpacity
+          onLongPress={() => deleteMessaage(item._id, item.user.id)}
+          delayLongPress={500}
+          activeOpacity={0.7}>
           <View
             style={[
-              styles.messageBox,
+              styles.messageRow,
               {
-                backgroundColor: isMyMessage(item.user.id)
-                  ? '#DCF8C5'
-                  : 'white',
-                marginLeft: isMyMessage(item.user.id) ? 50 : 10,
-                marginRight: isMyMessage(item.user.id) ? 0 : 50,
+                justifyContent: isMyMessage(item.user.id)
+                  ? 'flex-end'
+                  : 'flex-start',
               },
             ]}>
             {!isMyMessage(item.user.id) && (
-              <Text style={styles.name}>{item.user.name}</Text>
-            )}
-            <Text style={styles.message}>{item.content}</Text>
-            {item.mediaUrl && item.mediaType === 'image' ? (
-              <Image
-                source={{uri: item.mediaUrl}}
-                style={styles.messageImage}
-                resizeMode="contain"
-                onError={e =>
-                  console.error('Image Load Error:', e.nativeEvent.error)
-                }
+              <Avatar.Image
+                size={40}
+                source={{
+                  uri:
+                    participants[item.user.id]?.imageUrl ||
+                    item.user.imageUrl ||
+                    'https://via.placeholder.com/40',
+                }}
+                style={styles.avatar}
               />
-            ) : null}
-            <Text style={styles.time}>{moment(item.createdAt).fromNow()}</Text>
+            )}
+            <View
+              style={[
+                styles.messageBox,
+                {
+                  backgroundColor: isMyMessage(item.user.id)
+                    ? '#DCF8C5'
+                    : 'white',
+                  marginLeft: isMyMessage(item.user.id) ? 50 : 10,
+                  marginRight: isMyMessage(item.user.id) ? 0 : 50,
+                },
+              ]}>
+              {!isMyMessage(item.user.id) && (
+                <Text style={styles.name}>{item.user.name}</Text>
+              )}
+              <Text style={styles.message}>{item.content}</Text>
+              {item.mediaUrl && item.mediaType === 'image' ? (
+                <Image
+                  source={{uri: item.mediaUrl}}
+                  style={styles.messageImage}
+                  resizeMode="contain"
+                  onError={e =>
+                    console.error('Image Load Error:', e.nativeEvent.error)
+                  }
+                />
+              ) : null}
+              <Text style={styles.time}>
+                {moment(item.createdAt).fromNow()}
+              </Text>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -324,6 +370,12 @@ export function ChatRoomScreen() {
             </View>
           </ImageBackground>
         </KeyboardAvoidingView>
+        <AddMemberModal
+        chatId={chatId}
+        participants={participants}
+        isVisible={addMemberModalVisible}
+        onDismiss={() => setAddMemberModalVisible(false)}
+      />
       </SafeAreaView>
     </Provider>
   );
