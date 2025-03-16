@@ -5,10 +5,13 @@ import {Alert, Image, Text, TouchableOpacity, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {BaseUser} from '../../types';
 import styles from './styles';
+import {useNavigation} from '@react-navigation/native';
 
-export function UserProfileScreen({navigation}: any) {
+export function UserProfileScreen(props: any) {
   const [userData, setUserData] = useState<BaseUser | null>(null);
   const currentUser = auth().currentUser;
+  const navigationHook = useNavigation();
+  const navigation = props?.navigation || navigationHook;
 
   useEffect(() => {
     if (currentUser) {
@@ -42,6 +45,11 @@ export function UserProfileScreen({navigation}: any) {
       icon: 'image-multiple-outline',
       title: 'Media & Files',
       onPress: () => Alert.alert('Coming Soon', 'This feature is coming soon!'),
+    },
+    {
+      icon: 'test-tube-empty',
+      title: 'Test Lazy Loading',
+      onPress: () => navigation.navigate('LazyLoadingTest'),
     },
   ];
 

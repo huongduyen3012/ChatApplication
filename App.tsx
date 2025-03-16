@@ -1,26 +1,57 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-import React from 'react';
-import {Provider} from 'react-native-paper';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { lazy, Suspense } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { Provider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {ChatRoomScreen} from './components/ChatRoom';
-import {ChatInfoScreen} from './components/ChatRoom/ChatInformation';
-import {MemberList} from './components/ChatRoom/MemberList';
-import ContactScreen from './components/Contact';
-import VideoCallScreen from './components/Contact/VideoCallScreen';
 import HomeScreen from './components/HomeScreen';
-import ForgotPasswordScreen from './components/Login&Register/ForgotPassword';
 import LoginPage from './components/Login&Register/Login';
-import {RegisterScreen} from './components/Login&Register/Register';
-import {NewChatScreen} from './components/NewChat';
-import {SettingsScreen} from './components/Settings';
-import {UserProfileScreen} from './components/UserProfile';
-import {EditProfileScreen} from './components/UserProfile/EditProfile';
+import { RegisterScreen } from './components/Login&Register/Register';
 import Colors from './constants/Colors';
 
-type RootStackParamList = {
+const ChatRoomScreen = lazy(() =>
+  import('./components/ChatRoom').then(module => ({
+    default: module.ChatRoomScreen,
+  })),
+);
+const ChatInfoScreen = lazy(() =>
+  import('./components/ChatRoom/ChatInformation').then(module => ({
+    default: module.ChatInfoScreen,
+  })),
+);
+const MemberList = lazy(() =>
+  import('./components/ChatRoom/MemberList').then(module => ({
+    default: module.MemberList,
+  })),
+);
+const ForgotPasswordScreen = lazy(
+  () => import('./components/Login&Register/ForgotPassword'),
+);
+const NewChatScreen = lazy(() =>
+  import('./components/NewChat').then(module => ({
+    default: module.NewChatScreen,
+  })),
+);
+const SettingsScreen = lazy(() =>
+  import('./components/Settings').then(module => ({
+    default: module.SettingsScreen,
+  })),
+);
+const UserProfileScreen = lazy(() =>
+  import('./components/UserProfile').then(module => ({
+    default: module.UserProfileScreen,
+  })),
+);
+const EditProfileScreen = lazy(() =>
+  import('./components/UserProfile/EditProfile').then(module => ({
+    default: module.EditProfileScreen,
+  })),
+);
+
+export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
@@ -49,6 +80,21 @@ type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
+const LoadingComponent = () => {
+  const theme = Colors.getTheme('light');
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.background,
+      }}>
+      <ActivityIndicator size="large" color={theme.primary} />
+    </View>
+  );
+};
+
 function MainTabs() {
   const theme = Colors.getTheme('light');
   return (
@@ -70,27 +116,20 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Contact"
-        component={ContactScreen}
-        options={{
-          tabBarIcon: ({color, size}) => (
-            <Icon name="contacts" size={size} color={color} />
-          ),
-          headerStyle: {backgroundColor: theme.primary},
-          headerTintColor: '#fff',
-        }}
-      />
-      <Tab.Screen
         name="User"
-        component={UserProfileScreen}
         options={{
           tabBarIcon: ({color, size}) => (
             <Icon name="account" size={size} color={color} />
           ),
           headerStyle: {backgroundColor: theme.primary},
           headerTintColor: '#fff',
-        }}
-      />
+        }}>
+        {() => (
+          <Suspense fallback={<LoadingComponent />}>
+            <UserProfileScreen />
+          </Suspense>
+        )}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
@@ -123,28 +162,57 @@ export default function App() {
           />
           <Stack.Screen
             name="ChatScreen"
-            component={ChatRoomScreen}
-            options={({route}) => ({title: route.params.name})}
-          />
+            options={({route}) => ({title: route.params.name})}>
+            {props => {
+              const {route, navigation} = props;
+              const {chatId, name} = route.params;
+              return (
+                <Suspense fallback={<LoadingComponent />}>
+                  <ChatRoomScreen
+                    chatId={chatId}
+                    name={name}
+                    navigation={navigation}
+                  />
+                </Suspense>
+              );
+            }}
+          </Stack.Screen>
+          <Stack.Screen name="NewChat" options={{title: 'New Chat'}}>
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <NewChatScreen {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Settings">
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <SettingsScreen {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="ForgotPassword">
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <ForgotPasswordScreen {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="ChatInfo">
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <ChatInfoScreen {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="EditProfile">
+            {() => (
+              <Suspense fallback={<LoadingComponent />}>
+                <EditProfileScreen />
+              </Suspense>
+            )}
+          </Stack.Screen>
           <Stack.Screen
-            name="NewChat"
-            component={NewChatScreen}
-            options={{title: 'New Chat'}}
-          />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen
-            name="VideoCallScreen"
-            component={VideoCallScreen}
-            options={({route}) => ({title: route.params.channelName})}
-          />
-          <Stack.Screen
-            name="ForgotPassword"
-            component={ForgotPasswordScreen}
-          />
-          <Stack.Screen name="ChatInfo" component={ChatInfoScreen} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen
-            component={MemberList}
             name="MemberList"
             options={() => ({
               title: 'Group Members',
@@ -152,8 +220,13 @@ export default function App() {
                 backgroundColor: theme.primary,
               },
               headerTintColor: '#fff',
-            })}
-          />
+            })}>
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <MemberList {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

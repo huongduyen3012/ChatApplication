@@ -172,7 +172,9 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
     if (item.type === 'group') {
       return (
         <TouchableWithoutFeedback
-          onLongPress={() => handleDeleteChat(item._id, item.name || 'Group Chat', true)}
+          onLongPress={() =>
+            handleDeleteChat(item._id, item.name || 'Group Chat', true)
+          }
           onPress={() =>
             navigation.navigate('ChatScreen', {
               chatId: item._id,
