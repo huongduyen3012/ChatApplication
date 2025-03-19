@@ -2,15 +2,20 @@ export interface BaseUser {
   name: string;
   email: string;
   imageUrl: string;
+  phoneNumber?: string;
+  bio?: string;
 }
 
 export interface User extends BaseUser {
   id: string;
   isAdmin?: boolean;
+  createdAt?: number;
 }
 
 export interface ChatParticipant extends BaseUser {
+  id: string;
   isAdmin?: boolean;
+  role?: 'admin' | 'member';
 }
 
 export interface Message {
@@ -54,3 +59,5 @@ export interface Chat {
   createdBy: string;
   updatedAt: number;
 }
+
+

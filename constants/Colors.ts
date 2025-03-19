@@ -1,4 +1,4 @@
-const primaryColor = '#5D3FD3';    // Richer purple (slightly updated from your #420475)
+const primaryColor = '#24786D';    // Richer purple (slightly updated from your #24786D)
 const secondaryColor = '#5B8DEF';  // Soft blue (replacing #6C63FF)
 const accentColor = '#FF6B6B';     // Coral red (slightly updated from #FF6584)
 

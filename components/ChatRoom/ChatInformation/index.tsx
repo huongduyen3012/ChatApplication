@@ -1,13 +1,16 @@
-/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react-native/no-inline-styles */
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import { useRoute } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import {useRoute} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
 import {
   Alert,
   FlatList,
   Image,
+  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -23,12 +26,15 @@ import {
   Title,
 } from 'react-native-paper';
 import theme from '../../../constants/Theme';
-import { ChatParticipant } from '../../../types';
-import { styles } from './styles';
+import {ChatParticipant} from '../../../types';
+import {styles} from './styles';
 
 export function ChatInfoScreen({navigation}: {navigation: any}) {
+  // --- STATE ---
   const route = useRoute<any>();
   const {chatId, participant, isGroup} = route.params;
+  const currentUser = auth().currentUser;
+
   const [mediaFiles, setMediaFiles] = useState<any[]>([]);
   const [otherFiles, setOtherFiles] = useState<any[]>([]);
   const [receiverInfo, setReceiverInfo] = useState<ChatParticipant | null>(
@@ -37,120 +43,254 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
   const [groupInfo, setGroupInfo] = useState<any>(null);
   const [groupMembers, setGroupMembers] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [_, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const currentUser = auth().currentUser;
-
-  useEffect(() => {
+  const setupNavigation = () => {
     navigation.setOptions({
       title: 'Chat Information',
-      headerStyle: {
-        backgroundColor: theme.primary,
-      },
+      headerStyle: {backgroundColor: theme.primary},
       headerTintColor: '#fff',
     });
+  };
 
-    const loadMedia = async () => {
-      setIsLoading(true);
-      try {
-        const messageRef = database().ref(`/messages/${chatId}`);
-        const snapshot = await messageRef.once('value');
+  const loadMedia = async () => {
+    setIsLoading(true);
+    try {
+      const messageRef = database().ref(`/messages/${chatId}`);
+      const snapshot = await messageRef.once('value');
 
-        const media: any[] = [];
-        const files: any[] = [];
+      const media: any[] = [];
+      const files: any[] = [];
 
-        if (snapshot.exists()) {
-          snapshot.forEach(child => {
-            const message = child.val();
-            if (message.mediaUrl) {
-              const fileItem = {
-                id: child.key,
-                url: message.mediaUrl,
-                name: message.fileName || 'Unnamed file',
-                type: message.mediaType,
-                timestamp: message.createdAt,
-              };
-              if (message.mediaType === 'image') {
-                media.push(fileItem);
-              } else {
-                files.push(fileItem);
-              }
-            }
-            return undefined;
-          });
-        }
-        setMediaFiles(media);
-        setOtherFiles(files);
-      } catch (error) {
-        console.log(error);
-        Alert.alert('Error', 'Failed to load media files');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    const loadBasicChatInfo = async () => {
-      try {
-        const chatRef = database().ref(`chats/${chatId}`);
-        const snapshot = await chatRef.once('value');
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const message = child.val();
+          if (message.mediaUrl) {
+            const fileItem = {
+              id: child.key,
+              url: message.mediaUrl,
+              name: message.fileName || 'Unnamed file',
+              type: message.mediaType,
+              timestamp: message.createdAt,
+            };
 
-        if (snapshot.exists()) {
-          const chatData = snapshot.val();
-
-          if (chatData.type === 'group' || isGroup) {
-            setGroupInfo({
-              name: chatData.name,
-              imageUrl: chatData.imageUrl,
-              createdAt: chatData.createdAt,
-              createdBy: chatData.createdBy,
-            });
-            return;
-          }
-
-          if (currentUser && chatData.participants) {
-            if (
-              chatData.participants.sender &&
-              chatData.participants.receiver
-            ) {
-              if (chatData.participants.sender.id === currentUser.uid) {
-                setReceiverInfo(chatData.participants.receiver);
-                return;
-              } else if (
-                chatData.participants.receiver.id === currentUser.uid
-              ) {
-                setReceiverInfo(chatData.participants.sender);
-                return;
-              }
+            if (message.mediaType === 'image') {
+              media.push(fileItem);
             } else {
-              const participantIds = Object.keys(chatData.participants);
-              const otherParticipantId = participantIds.find(
-                id => id !== currentUser.uid,
-              );
-
-              if (otherParticipantId) {
-                const otherParticipantInfo =
-                  chatData.participants[otherParticipantId];
-                setReceiverInfo({
-                  name: otherParticipantInfo.name,
-                  email: otherParticipantInfo.email || '',
-                  imageUrl: otherParticipantInfo.imageUrl || '',
-                  isAdmin: otherParticipantInfo.isAdmin,
-                });
-                return;
-              }
+              files.push(fileItem);
             }
           }
-        } else {
-          console.log('Chat not found with ID:', chatId);
-        }
-      } catch (error) {
-        console.log('Error loading chat info:', error);
-        Alert.alert('Error', 'Failed to load chat information');
+          return undefined;
+        });
       }
-    };
+      setMediaFiles(media);
+      setOtherFiles(files);
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Failed to load media files');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const getReceiverFromUserId = async (userId: string, basicInfo: any) => {
+    try {
+      const userRef = database().ref(`users/${userId}`);
+      const userSnapshot = await userRef.once('value');
+
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.val();
+        return {
+          id: userId,
+          name: basicInfo?.name || userData.name || 'Unknown User',
+          email: basicInfo?.email || userData.email || '',
+          imageUrl: basicInfo?.imageUrl || userData.imageUrl || '',
+          phoneNumber: basicInfo?.phoneNumber || userData.phoneNumber || '',
+          isAdmin: basicInfo?.isAdmin || false,
+          bio: userData.bio || '',
+        };
+      } else {
+        return {
+          id: userId,
+          name: basicInfo?.name || 'Unknown User',
+          email: basicInfo?.email || '',
+          imageUrl: basicInfo?.imageUrl || '',
+          phoneNumber: basicInfo?.phoneNumber || '',
+          isAdmin: basicInfo?.isAdmin || false,
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return basicInfo;
+    }
+  };
+
+  const loadBasicChatInfo = async () => {
+    try {
+      const chatRef = database().ref(`chats/${chatId}`);
+      const snapshot = await chatRef.once('value');
+
+      if (snapshot.exists()) {
+        const chatData = snapshot.val();
+
+        if (chatData.type === 'group' || isGroup) {
+          setGroupInfo({
+            name: chatData.name,
+            imageUrl: chatData.imageUrl,
+            createdAt: chatData.createdAt,
+            createdBy: chatData.createdBy,
+          });
+          if (chatData.members) {
+            const membersArray = Object.entries(chatData.members).map(
+              ([memberId, memberData]: [string, any]) => ({
+                id: memberId,
+                ...(typeof memberData === 'object' && memberData !== null
+                  ? memberData
+                  : {}),
+              }),
+            );
+            console.log('Initial members loaded:', membersArray.length);
+            setGroupMembers(membersArray);
+
+            if (currentUser && chatData.members[currentUser.uid]) {
+              const currentMember = chatData.members[currentUser.uid];
+              setIsAdmin(
+                currentMember.isAdmin || currentMember.role === 'admin',
+              );
+            }
+          }
+          return;
+        }
+
+        if (currentUser && chatData.participants) {
+          if (chatData.participants.sender && chatData.participants.receiver) {
+            if (chatData.participants.sender.id === currentUser.uid) {
+              setReceiverInfo(chatData.participants.receiver);
+              return;
+            } else if (chatData.participants.receiver.id === currentUser.uid) {
+              setReceiverInfo(chatData.participants.sender);
+              return;
+            }
+          } else {
+            const participantIds = Object.keys(chatData.participants);
+            const otherParticipantId = participantIds.find(
+              id => id !== currentUser.uid,
+            );
+
+            if (otherParticipantId) {
+              const otherParticipantInfo =
+                chatData.participants[otherParticipantId];
+              const completeReceiverInfo = await getReceiverFromUserId(
+                otherParticipantId,
+                otherParticipantInfo,
+              );
+              setReceiverInfo(completeReceiverInfo);
+              return;
+            }
+          }
+        }
+      } else {
+        console.log('Chat not found with ID:', chatId);
+      }
+    } catch (error) {
+      console.log('Error loading chat info:', error);
+      Alert.alert('Error', 'Failed to load chat information');
+    }
+  };
+
+  const navigateToFriendProfile = () => {
+    if (!receiverInfo) {
+      Alert.alert('Error', 'User information not available');
+      return;
+    }
+
+    navigation.navigate('FriendProfile', {
+      userId: receiverInfo.id,
+      initialData: receiverInfo,
+    });
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!currentUser) {
+      return;
+    }
+
+    Alert.alert('Leave Group', 'Are you sure you want to leave this group?', [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await database()
+              .ref(`chats/${chatId}/members/${currentUser.uid}`)
+              .remove();
+            Alert.alert('Success', 'You have left the group');
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'MainTabs'}],
+            });
+          } catch (error) {
+            console.error('Error leaving group:', error);
+            Alert.alert('Error', 'Failed to leave group');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleEditGroup = () => {
+    if (!isAdmin) {
+      Alert.alert('Error', 'Only admins can edit group details');
+      return;
+    }
+
+    Alert.alert('Coming Soon', 'Group editing will be available soon');
+  };
+
+  useEffect(() => {
+    setupNavigation();
     loadBasicChatInfo();
     loadMedia();
   }, [chatId, navigation, participant, currentUser, isGroup]);
+
+  const membersRef = database().ref(`chats/${chatId}/members`);
+  useEffect(() => {
+    if (!chatId || !isGroup) {
+      return;
+    }
+
+    const handleMembersChange = (snapshot: any) => {
+      if (snapshot.exists()) {
+        const membersData = snapshot.val();
+        const membersArray = Object.entries(membersData).map(
+          ([memberId, memberData]: [string, any]) => ({
+            id: memberId,
+            ...(typeof memberData === 'object' && memberData !== null
+              ? memberData
+              : {}),
+          }),
+        );
+
+        console.log('Group members loaded:', membersArray.length); // Add this debug log
+        setGroupMembers(membersArray);
+
+        if (currentUser) {
+          const currentMember = membersData[currentUser.uid];
+          if (currentMember) {
+            setIsAdmin(currentMember.isAdmin || currentMember.role === 'admin');
+          }
+        }
+      } else {
+        console.log('No group members found');
+        setGroupMembers([]);
+      }
+    };
+
+    membersRef.on('value', handleMembersChange);
+
+    return () => membersRef.off('value', handleMembersChange);
+  }, [chatId, currentUser, isGroup]);
 
   const renderMediaItem = ({item}: {item: any}) => (
     <TouchableOpacity style={styles.mediaItem}>
@@ -187,89 +327,6 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
     />
   );
 
-  const handleLeaveGroup = async () => {
-    if (!currentUser) {
-      return;
-    }
-
-    Alert.alert('Leave Group', 'Are you sure you want to leave this group?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Leave',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await database()
-              .ref(`chats/${chatId}/members/${currentUser.uid}`)
-              .remove();
-
-            navigation.navigate('ChatScreen');
-            Alert.alert('Success', 'You have left the group');
-          } catch (error) {
-            console.error('Error leaving group:', error);
-            Alert.alert('Error', 'Failed to leave group');
-          }
-        },
-      },
-    ]);
-  };
-
-  const handleEditGroup = () => {
-    if (!isAdmin) {
-      Alert.alert('Error', 'Only admins can edit group details');
-      return;
-    }
-
-    Alert.alert('Coming Soon', 'Group editing will be available soon');
-  };
-
-  useEffect(() => {
-    if (!chatId) {
-      return;
-    }
-
-    const membersRef = database().ref(`chats/${chatId}/members`);
-
-    const handleMembersChange = (snapshot: any) => {
-      if (snapshot.exists()) {
-        const membersData = snapshot.val();
-        const membersArray = Object.entries(membersData).map(
-          ([memberId, memberData]: [string, any]) => ({
-            id: memberId,
-            ...(typeof memberData === 'object' && memberData !== null
-              ? memberData
-              : {}),
-          }),
-        );
-
-        console.log(
-          'ChatInfo - realtime update, members:',
-          membersArray.length,
-        );
-        setGroupMembers(membersArray);
-
-        if (currentUser) {
-          const currentMember = membersData[currentUser.uid];
-          if (currentMember) {
-            const isUserAdmin =
-              currentMember.isAdmin || currentMember.role === 'admin';
-            setIsAdmin(isUserAdmin);
-          }
-        }
-      } else {
-        setGroupMembers([]);
-      }
-    };
-
-    membersRef.on('value', handleMembersChange);
-
-    return () => {
-      membersRef.off('value', handleMembersChange);
-    };
-  }, [chatId, currentUser]);
   return (
     <ScrollView style={styles.container}>
       {groupInfo ? (
@@ -347,7 +404,9 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
               <Text style={styles.contactActionText}>Video</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.contactActionButton}>
+            <TouchableOpacity
+              style={styles.contactActionButton}
+              onPress={navigateToFriendProfile}>
               <Icon source="account-details" size={24} color={theme.primary} />
               <Text style={styles.contactActionText}>Profile</Text>
             </TouchableOpacity>
@@ -357,6 +416,7 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
 
       <Divider style={styles.divider} />
 
+      {/* Media Section */}
       <List.Section>
         <List.Subheader style={styles.sectionHeader}>Images</List.Subheader>
         {mediaFiles.length > 0 ? (
@@ -376,6 +436,7 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
 
       <Divider style={styles.divider} />
 
+      {/* Files Section */}
       <List.Section>
         <List.Subheader style={styles.sectionHeader}>Files</List.Subheader>
         {otherFiles.length > 0 ? (

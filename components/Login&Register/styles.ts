@@ -8,7 +8,6 @@ const styles = StyleSheet.create({
   },
   loginContainer: {
     paddingHorizontal: 25,
-    paddingTop: 10,
     paddingBottom: 30,
   },
   logoContainer: {
@@ -17,8 +16,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 150,
+    height: 150,
   },
   headerText: {
     fontSize: 30,
@@ -40,7 +39,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     marginBottom: 20,
-    backgroundColor: '#F8FAFD',
+    backgroundColor: 'white',
     alignItems: 'center',
     height: 55,
     paddingHorizontal: 15,
@@ -72,7 +71,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingBottom: 30,
   },
-  inBut: {
+  input: {
     width: '100%',
     height: 55,
     backgroundColor: theme.primary,
@@ -137,19 +136,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     height: 50,
     width: '48%',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 2},
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+    // elevation: 2,
   },
   socialButtonText: {
+    color: theme.primary,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  socialGoogleButtonText: {
     color: 'white',
     fontWeight: '600',
     marginLeft: 8,
   },
   registerButton: {
-    backgroundColor: theme.secondary,
+    backgroundColor: 'white',
+    borderColor: theme.primary,
+    borderWidth: 1,
   },
   googleButton: {
     backgroundColor: '#DB4437',

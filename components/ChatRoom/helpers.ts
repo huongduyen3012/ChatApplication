@@ -1,19 +1,15 @@
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import { NavigationProp, RouteProp } from '@react-navigation/core';
-import { Alert } from 'react-native';
+import {NavigationProp, RouteProp} from '@react-navigation/core';
+import {Alert} from 'react-native';
 import RNFS from 'react-native-fs';
-import { RootStackParamList } from '../../App';
+import {RootStackParamList} from '../../App';
 
-// type RootStackParamList = {
-//   ChatRoom: {chatId: string; name: string};
-//   ChatInfo: {chatId: string; isGroupChat: boolean};
-//   VideoCallScreen: {channelName: string};
-//   EditProfile: undefined;
-//   Settings: undefined;
-//   Friends: undefined;
-//   Media: undefined;
-// };
+export interface ChatRoomScreenProps {
+  chatId?: string;
+  name?: string;
+  navigation: any;
+}
 
 export type ChatRoomRouteProp = RouteProp<RootStackParamList, 'ChatScreen'>;
 export type NavigationType = NavigationProp<RootStackParamList>;

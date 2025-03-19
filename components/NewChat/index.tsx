@@ -80,6 +80,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
               name: data.name,
               email: data.email,
               imageUrl: data.imageUrl,
+              phoneNumber: data.phoneNumber || '',
             }));
           setUsers(usersList);
         }
@@ -134,12 +135,14 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
             name: currentUser?.displayName || 'Me',
             email: currentUser?.email,
             imageUrl: currentUser?.photoURL || 'https://via.placeholder.com/50',
+            phoneNumber: currentUser?.phoneNumber,
           },
           receiver: {
             id: selectedUser.id,
             name: selectedUser.name,
             email: selectedUser.email,
             imageUrl: selectedUser.imageUrl,
+            phoneNumber: selectedUser.phoneNumber,
           },
         },
         messages: [],
@@ -179,6 +182,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
           name: currentUser?.displayName || 'Me',
           email: currentUser?.email,
           imageUrl: currentUser?.photoURL || 'https://via.placeholder.com/50',
+          phoneNumber: currentUser?.phoneNumber,
           role: 'admin',
         },
       };
@@ -189,6 +193,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
           name: user.name,
           email: user.email,
           imageUrl: user.imageUrl,
+          phoneNumber: user.phoneNumber,
           role: 'member',
         };
       });
@@ -340,16 +345,27 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
                   <Text style={styles.selectedUsersTitle}>
                     Selected ({selectedUsers.length}):
                   </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {selectedUsers.map(user => (
-                      <View key={user.id} style={styles.selectedUserChip}>
-                        <Text style={styles.selectedUserName}>{user.name}</Text>
-                        <TouchableOpacity
-                          onPress={() => toggleUserSelection(user)}>
-                          <Icon name="close-circle" size={20} color="white" />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                  <ScrollView
+                    style={styles.selectedUsersScrollContainer}
+                    contentContainerStyle={{flexGrow: 1}}
+                    nestedScrollEnabled={true}>
+                    <View style={styles.selectedUsersFlowContainer}>
+                      {selectedUsers.map(user => (
+                        <View key={user.id} style={styles.selectedUserChip}>
+                          <Text
+                            style={styles.selectedUserName}
+                            numberOfLines={1}
+                            ellipsizeMode="tail">
+                            {user.name}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.removeUserButton}
+                            onPress={() => toggleUserSelection(user)}>
+                            <Icon name="close-circle" size={20} color="white" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
                   </ScrollView>
                 </View>
               )}

@@ -57,7 +57,7 @@ const LoginPage = ({navigation}: any) => {
             createdAt: database.ServerValue.TIMESTAMP,
           });
       }
-
+      Alert.alert('Success', 'Log in successfully, welcome!');
       navigation.replace('MainTabs');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Email or Password is incorrect');
@@ -76,6 +76,7 @@ const LoginPage = ({navigation}: any) => {
       }
 
       const idToken = signInResult.data.idToken;
+      const user = signInResult.data.user;
       if (!idToken) {
         throw new Error('No ID token found in signInResult');
       }
@@ -85,6 +86,48 @@ const LoginPage = ({navigation}: any) => {
       const userCredential = await auth().signInWithCredential(
         googleCredential,
       );
+      const userId = userCredential.user.uid;
+
+      // Check if user exists in your database
+      const userSnapshot = await database()
+        .ref(`users/${userId}`)
+        .once('value');
+
+      if (!userSnapshot.exists()) {
+        await database()
+          .ref(`users/${userId}`)
+          .set({
+            name: user.name || userCredential.user.displayName || 'User',
+            email: user.email || userCredential.user.email,
+            imageUrl:
+              user.photo ||
+              userCredential.user.photoURL ||
+              'https://via.placeholder.com/50',
+            phoneNumber: userCredential.user.phoneNumber || '',
+            createdAt: database.ServerValue.TIMESTAMP,
+          });
+
+        console.log('Created new user record with Google data');
+      } else {
+        await database()
+          .ref(`users/${userId}`)
+          .update({
+            name:
+              user.name ||
+              userCredential.user.displayName ||
+              userSnapshot.val().name,
+            email:
+              user.email ||
+              userCredential.user.email ||
+              userSnapshot.val().email,
+            imageUrl:
+              user.photo ||
+              userCredential.user.photoURL ||
+              userSnapshot.val().imageUrl,
+          });
+
+        console.log('Updated existing user with Google data');
+      }
 
       console.log('Signed in with Google:', userCredential.user);
       Alert.alert('Success', 'Signed in with Google!');
@@ -130,12 +173,12 @@ const LoginPage = ({navigation}: any) => {
           <View style={styles.logoContainer}>
             <Image
               style={styles.logo}
-              source={require('../../assets/mainLogo.png')}
+              source={require('../../assets/login.png')}
               resizeMode="contain"
             />
           </View>
 
-          <Text style={styles.headerText}>Login</Text>
+          <Text style={styles.headerText}>Login to your Chat</Text>
 
           <View style={styles.inputContainer}>
             <View style={styles.iconContainer}>
@@ -198,7 +241,7 @@ const LoginPage = ({navigation}: any) => {
             <TouchableOpacity
               style={[styles.socialButton, styles.registerButton]}
               onPress={() => navigation.navigate('Register')}>
-              <Icon source="account-plus" color="white" size={26} />
+              <Icon source="account-plus" color={theme.primary} size={26} />
               <Text style={styles.socialButtonText}>Register</Text>
             </TouchableOpacity>
 
@@ -206,7 +249,7 @@ const LoginPage = ({navigation}: any) => {
               style={[styles.socialButton, styles.googleButton]}
               onPress={onGoogleButtonPress}>
               <Icon source="google" color="white" size={26} />
-              <Text style={styles.socialButtonText}>Google</Text>
+              <Text style={styles.socialGoogleButtonText}>Google</Text>
             </TouchableOpacity>
           </View>
         </View>

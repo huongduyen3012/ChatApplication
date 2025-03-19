@@ -46,11 +46,6 @@ export function UserProfileScreen(props: any) {
       title: 'Media & Files',
       onPress: () => Alert.alert('Coming Soon', 'This feature is coming soon!'),
     },
-    {
-      icon: 'test-tube-empty',
-      title: 'Test Lazy Loading',
-      onPress: () => navigation.navigate('LazyLoadingTest'),
-    },
   ];
 
   return (
@@ -71,8 +66,19 @@ export function UserProfileScreen(props: any) {
         </TouchableOpacity>
         <Text style={styles.name}>{userData?.name || 'Loading...'}</Text>
         <Text style={styles.email}>{userData?.email || ''}</Text>
-      </View>
 
+        <View style={styles.phoneContainer}>
+          <Icon name="phone" size={18} color="#666" style={styles.phoneIcon} />
+          <Text style={styles.phoneText}>
+            {userData?.phoneNumber || 'No phone number added'}
+          </Text>
+        </View>
+      </View>
+      {userData?.bio && (
+        <View style={styles.bioContainer}>
+          <Text style={styles.bioText}>{userData.bio}</Text>
+        </View>
+      )}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>152</Text>

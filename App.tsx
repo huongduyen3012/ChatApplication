@@ -1,16 +1,17 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/no-unstable-nested-components */
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import React, { lazy, Suspense } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { Provider } from 'react-native-paper';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import React, {lazy, Suspense} from 'react';
+import {ActivityIndicator, View} from 'react-native';
+import {Provider} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from './components/HomeScreen';
 import LoginPage from './components/Login&Register/Login';
-import { RegisterScreen } from './components/Login&Register/Register';
+import {RegisterScreen} from './components/Login&Register/Register';
 import Colors from './constants/Colors';
+import ContactScreen from './components/Contact';
 
 const ChatRoomScreen = lazy(() =>
   import('./components/ChatRoom').then(module => ({
@@ -50,7 +51,12 @@ const EditProfileScreen = lazy(() =>
     default: module.EditProfileScreen,
   })),
 );
-
+const FriendProfileScreen = lazy(() =>
+  import('./components/ChatRoom/FriendProfileScreen/index').then(module => ({
+    default: module.FriendProfileScreen,
+  })),
+);
+//12694154B6009017
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -75,6 +81,7 @@ export type RootStackParamList = {
     isGroupAdmin?: boolean;
     onRemoveMember?: (userId: string) => void;
   };
+  FriendProfile: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -113,6 +120,18 @@ function MainTabs() {
           headerStyle: {backgroundColor: theme.primary},
           headerTintColor: '#fff',
           title: 'Home',
+        }}
+      />
+      <Tab.Screen
+        name="Contact"
+        component={ContactScreen}
+        options={{
+          tabBarIcon: ({color, size}) => (
+            <Icon name="chat" size={size} color={color} />
+          ),
+          headerStyle: {backgroundColor: theme.primary},
+          headerTintColor: '#fff',
+          title: 'Contacts',
         }}
       />
       <Tab.Screen
@@ -224,6 +243,13 @@ export default function App() {
             {props => (
               <Suspense fallback={<LoadingComponent />}>
                 <MemberList {...props} />
+              </Suspense>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="FriendProfile">
+            {props => (
+              <Suspense fallback={<LoadingComponent />}>
+                <FriendProfileScreen {...props} />
               </Suspense>
             )}
           </Stack.Screen>

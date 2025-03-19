@@ -2,12 +2,12 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react/react-in-jsx-scope */
 import auth from '@react-native-firebase/auth';
-import database, { DataSnapshot } from '@react-native-firebase/database';
-import { useEffect, useState } from 'react';
-import { Alert, FlatList, Text, View } from 'react-native';
-import { Avatar, IconButton, Modal, Portal, Searchbar } from 'react-native-paper';
-import { ChatParticipant, User } from '../../../types';
-import { styles } from './styles';
+import database, {DataSnapshot} from '@react-native-firebase/database';
+import {useEffect, useState} from 'react';
+import {Alert, FlatList, Text, View} from 'react-native';
+import {Avatar, IconButton, Modal, Portal, Searchbar} from 'react-native-paper';
+import {ChatParticipant, User} from '../../../types';
+import {styles} from './styles';
 import theme from '../../../constants/Theme';
 
 export const AddMemberModal = ({
@@ -83,6 +83,17 @@ export const AddMemberModal = ({
 
   const addMember = async (userId: string, userInfo: any) => {
     try {
+      const memberRef = database().ref(`chats/${chatId}/members/${userId}`);
+      const memberSnapshot = await memberRef.once('value');
+
+      if (memberSnapshot.exists()) {
+        Alert.alert(
+          'Already a Member',
+          `${userInfo.name} is already in this group.`,
+        );
+        return;
+      }
+
       await database().ref(`chats/${chatId}/members/${userId}`).set({
         name: userInfo.name,
         email: userInfo.email,

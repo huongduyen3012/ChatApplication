@@ -86,6 +86,33 @@ const styles = StyleSheet.create({
   menuItemArrow: {
     opacity: 0.3,
   },
+
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    paddingHorizontal: 20,
+  },
+  phoneIcon: {
+    marginRight: 6,
+  },
+  phoneText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bioContainer: {
+    paddingHorizontal: 25,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  bioText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
 });
 
 export default styles;

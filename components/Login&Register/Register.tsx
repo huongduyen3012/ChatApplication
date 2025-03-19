@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Alert,
   Image,
@@ -12,15 +12,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Icon } from 'react-native-paper';
+import {Icon} from 'react-native-paper';
 import styles from './styles';
 import theme from '../../constants/Theme';
 
 export const RegisterScreen = ({navigation}: any) => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   const isValidEmail = (email: string) =>
@@ -29,8 +30,10 @@ export const RegisterScreen = ({navigation}: any) => {
   const isValidPassword = (password: string) =>
     /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(password);
 
+  const isValidPhone = (phone: string) => /^\+?[0-9]{10,15}$/.test(phone);
+
   const handleSubmit = async () => {
-    if (!username || !email || !password) {
+    if (!name || !email || !password) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
@@ -48,21 +51,29 @@ export const RegisterScreen = ({navigation}: any) => {
       return;
     }
 
+    if (phoneNumber && !isValidPhone(phoneNumber)) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
     setLoading(true);
 
     try {
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        email,
+        password,
+      );
       const userId = userCredential.user.uid;
 
       await database().ref(`/users/${userId}`).set({
-        username,
+        name,
         email,
+        phoneNumber: phoneNumber.trim(),
         imageUrl: 'https://i.pravatar.cc/150?img=05',
         createdAt: new Date().toISOString(),
       });
 
       await userCredential.user.updateProfile({
-        displayName: username,
+        displayName: name,
       });
 
       Alert.alert('Success', 'Account created successfully!');
@@ -84,7 +95,7 @@ export const RegisterScreen = ({navigation}: any) => {
         <View style={styles.logoContainer}>
           <Image
             style={styles.logo}
-            source={require('../../assets/signUp.png')}
+            source={require('../../assets/sign-up.png')}
           />
         </View>
         <View style={styles.loginContainer}>
@@ -95,19 +106,19 @@ export const RegisterScreen = ({navigation}: any) => {
             <TextInput
               placeholder="Enter Username"
               style={styles.textInput}
-              onChangeText={setUsername}
-              value={username}
+              onChangeText={setName}
+              value={name}
               placeholderTextColor={theme.textSecondary}
             />
-            {username.length > 0 && (
+            {name.length > 0 && (
               <Icon
-                source={username.length >= 3 ? 'check-circle' : 'close-circle'}
-                color={username.length >= 3 ? theme.success : theme.error}
+                source={name.length >= 3 ? 'check-circle' : 'close-circle'}
+                color={name.length >= 3 ? theme.success : theme.error}
                 size={24}
               />
             )}
           </View>
-          {username.length > 0 && username.length < 3 && (
+          {name.length > 0 && name.length < 3 && (
             <Text style={styles.errorText}>
               Username must be at least 3 characters
             </Text>
@@ -133,11 +144,28 @@ export const RegisterScreen = ({navigation}: any) => {
             )}
           </View>
           {!isValidEmail(email) && email.length > 0 && (
-            <Text style={styles.errorText}>
-              Enter a valid email address
-            </Text>
+            <Text style={styles.errorText}>Enter a valid email address</Text>
           )}
-
+          <View style={styles.inputContainer}>
+            <Icon source="phone" color={theme.primary} size={24} />
+            <TextInput
+              placeholder="Enter Phone Number (optional)"
+              style={styles.textInput}
+              onChangeText={setPhoneNumber}
+              value={phoneNumber}
+              keyboardType="phone-pad"
+              placeholderTextColor={theme.textSecondary}
+            />
+            {phoneNumber.length > 0 && (
+              <Icon
+                source={
+                  isValidPhone(phoneNumber) ? 'check-circle' : 'close-circle'
+                }
+                color={isValidPhone(phoneNumber) ? theme.success : theme.error}
+                size={24}
+              />
+            )}
+          </View>
           <View style={styles.inputContainer}>
             <Icon source="lock" color={theme.primary} size={24} />
             <TextInput
@@ -175,10 +203,7 @@ export const RegisterScreen = ({navigation}: any) => {
 
         <View style={styles.button}>
           <TouchableOpacity
-            style={[
-              styles.inBut, 
-              loading && styles.disabledButton
-            ]}
+            style={[styles.input, loading && styles.disabledButton]}
             onPress={handleSubmit}
             disabled={loading}>
             <Text style={styles.textSign}>

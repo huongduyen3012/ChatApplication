@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {Avatar, FAB, IconButton} from 'react-native-paper';
 import {Chat, User} from '../types';
-import {generateMockChats} from './helpers';
 import styles from './styles';
 import theme from '../constants/Theme';
 
@@ -32,19 +31,6 @@ const HomeScreen = ({navigation}: {navigation: any}) => {
     }
 
     const chatsRef = database().ref('chats');
-
-    const fetchAndUploadMockData = async () => {
-      try {
-        const snapshot = await chatsRef.once('value');
-        if (!snapshot.exists()) {
-          const mockChatList = await generateMockChats();
-          await chatsRef.set(mockChatList);
-        }
-      } catch (error) {
-        console.error('❌ Error uploading mock data:', error);
-      }
-    };
-    fetchAndUploadMockData();
 
     const unsubscribe = chatsRef.on('value', snapshot => {
       if (snapshot.exists()) {

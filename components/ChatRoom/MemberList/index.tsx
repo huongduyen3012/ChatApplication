@@ -128,7 +128,6 @@ export const MemberList = ({
         />
         <View style={styles.memberInfo}>
           <Text style={styles.memberName}>{item.name || 'Unknown'}</Text>
-          {item.email && <Text style={styles.memberEmail}>{item.email}</Text>}
         </View>
         <View style={styles.memberActions}>
           {isAdmin && (

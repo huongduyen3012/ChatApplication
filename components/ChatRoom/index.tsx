@@ -1,3 +1,4 @@
+/* eslint-disable no-const-assign */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unstable-nested-components */
@@ -33,15 +34,15 @@ import {
 } from 'react-native-paper';
 import {ChatParticipant, Message} from '../../types';
 import {AddMemberModal} from './AddMemberModal';
-import {ChatRoomRouteProp, NavigationType, uploadBase64} from './helpers';
+import {
+  ChatRoomRouteProp,
+  ChatRoomScreenProps,
+  NavigationType,
+  uploadBase64,
+} from './helpers';
 import styles from './styles';
-interface ChatRoomScreenProps {
-  chatId?: string;
-  name?: string;
-  navigation: any;
-}
 
-export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = (props) => {
+export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = props => {
   const route = useRoute<ChatRoomRouteProp>();
   const navigation = useNavigation<NavigationType>();
   const {chatId, name} = route.params;
@@ -62,7 +63,34 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = (props) => {
     chatRef.once('value', snapshot => {
       if (snapshot.exists()) {
         const chatData = snapshot.val();
-        setParticipants(chatData.participants || {});
+        if (chatData.participants) {
+          const updatedParticipants = {...chatData.participants};
+
+          Object.keys(updatedParticipants).forEach(async userId => {
+            if (!updatedParticipants[userId].phoneNumber) {
+              try {
+                const userSnapshot = await database()
+                  .ref(`users/${userId}`)
+                  .once('value');
+
+                if (userSnapshot.exists()) {
+                  const userData = userSnapshot.val();
+                  if (userData.phoneNumber) {
+                    updatedParticipants[userId].phoneNumber =
+                      userData.phoneNumber;
+                  }
+                }
+              } catch (error) {
+                console.error('Error fetching participant data:', error);
+              }
+            }
+          });
+
+          setParticipants(updatedParticipants);
+        } else {
+          setParticipants(chatData.participants || {});
+        }
+
         setChatInfo(chatData);
         setIsGroupChat(chatData.type === 'group');
       }
@@ -122,6 +150,14 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = (props) => {
               leadingIcon="information"
             />
             <Divider />
+            <Menu.Item
+              onPress={() => {
+                setMenuVisible(false);
+                navigation.navigate('MainTabs');
+              }}
+              title={'Back to Home'}
+              leadingIcon="home"
+            />
           </Menu>
         </View>
       ),
@@ -137,11 +173,34 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = (props) => {
       return;
     }
 
-    const userSnapshot = await database()
+    let userSnapshot = await database()
       .ref(`users/${currentUser?.uid}`)
       .once('value');
 
+    if (!userSnapshot.exists()) {
+      console.error('User data not found. Creating basic user data.');
+      await database()
+        .ref(`users/${currentUser?.uid}`)
+        .set({
+          name: currentUser?.displayName || 'User',
+          email: currentUser?.email || '',
+          imageUrl: currentUser?.photoURL || 'https://i.pravatar.cc/150?img=1',
+          phoneNumber: '',
+          bio: '',
+          createdAt: database.ServerValue.TIMESTAMP,
+        });
+
+      userSnapshot = await database()
+        .ref(`users/${currentUser?.uid}`)
+        .once('value');
+    }
+
     const userInfo = userSnapshot.val();
+
+    if (!userInfo) {
+      Alert.alert('Error', 'Could not retrieve user information.');
+      return;
+    }
 
     const messagesRef = database().ref(`messages/${chatId}`);
     const newMessageRef = messagesRef.push();
@@ -153,6 +212,8 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = (props) => {
         id: currentUser?.uid,
         name: userInfo.name,
         imageUrl: userInfo.imageUrl,
+        phoneNumber: userInfo.phoneNumber,
+        bio: userInfo.bio,
       },
     });
 
