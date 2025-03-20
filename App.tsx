@@ -127,7 +127,7 @@ function MainTabs() {
         component={ContactScreen}
         options={{
           tabBarIcon: ({color, size}) => (
-            <Icon name="chat" size={size} color={color} />
+            <Icon name="book-open-variant" size={size} color={color} />
           ),
           headerStyle: {backgroundColor: theme.primary},
           headerTintColor: '#fff',
@@ -135,7 +135,7 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="User"
+        name="User Profile"
         options={{
           tabBarIcon: ({color, size}) => (
             <Icon name="account" size={size} color={color} />
@@ -210,7 +210,9 @@ export default function App() {
               </Suspense>
             )}
           </Stack.Screen>
-          <Stack.Screen name="ForgotPassword">
+          <Stack.Screen
+            name="ForgotPassword"
+            options={{title: 'Back to Login'}}>
             {props => (
               <Suspense fallback={<LoadingComponent />}>
                 <ForgotPasswordScreen {...props} />
