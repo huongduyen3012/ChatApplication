@@ -64,10 +64,6 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
 
         if (Object.keys(newMockUsers).length > 0) {
           await usersRef.update(newMockUsers);
-          console.log(
-            'Added new mock users:',
-            Object.keys(newMockUsers).length,
-          );
         }
 
         const updatedSnapshot = await usersRef.once('value');
@@ -81,6 +77,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
               email: data.email,
               imageUrl: data.imageUrl,
               phoneNumber: data.phoneNumber || '',
+              bio: data.bio || '',
             }));
           setUsers(usersList);
         }
@@ -143,6 +140,7 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
             email: selectedUser.email,
             imageUrl: selectedUser.imageUrl,
             phoneNumber: selectedUser.phoneNumber,
+            bio: selectedUser.bio,
           },
         },
         messages: [],
@@ -173,6 +171,16 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
     }
 
     try {
+      const currentUserData = await database()
+        .ref(`users/${currentUser!.uid}`)
+        .once('value');
+
+      const userData = currentUserData.val() || {};
+      const adminImageUrl =
+        userData.imageUrl ||
+        currentUser?.photoURL ||
+        'https://via.placeholder.com/50';
+
       const chatsRef = database().ref('chats');
       const newChatRef = chatsRef.push();
 
@@ -181,12 +189,12 @@ export const NewChatScreen = ({navigation}: {navigation: any}) => {
           id: currentUser!.uid,
           name: currentUser?.displayName || 'Me',
           email: currentUser?.email,
-          imageUrl: currentUser?.photoURL || 'https://via.placeholder.com/50',
+          imageUrl: adminImageUrl,
           phoneNumber: currentUser?.phoneNumber,
           role: 'admin',
         },
       };
-
+      console.log('members', members);
       selectedUsers.forEach(user => {
         members[user.id] = {
           id: user.id,

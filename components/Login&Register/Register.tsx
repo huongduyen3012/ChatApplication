@@ -64,18 +64,22 @@ export const RegisterScreen = ({navigation}: any) => {
       );
       const userId = userCredential.user.uid;
 
+      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        name,
+      )}&background=random&color=fff&size=200`;
+
+      await userCredential.user.updateProfile({
+        displayName: name,
+        photoURL: avatarUrl,
+      });
+
       await database().ref(`/users/${userId}`).set({
         name,
         email,
         phoneNumber: phoneNumber.trim(),
-        imageUrl: 'https://i.pravatar.cc/150?img=05',
+        imageUrl: avatarUrl,
         createdAt: new Date().toISOString(),
       });
-
-      await userCredential.user.updateProfile({
-        displayName: name,
-      });
-
       Alert.alert('Success', 'Account created successfully!');
       navigation.replace('Login');
     } catch (error: any) {
@@ -176,6 +180,13 @@ export const RegisterScreen = ({navigation}: any) => {
               secureTextEntry={!showPassword}
               placeholderTextColor={theme.textSecondary}
             />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Icon
+                source={showPassword ? 'eye' : 'eye-off'}
+                color={theme.primary}
+                size={23}
+              />
+            </TouchableOpacity>
             {password.length > 0 && (
               <Icon
                 source={
@@ -185,13 +196,6 @@ export const RegisterScreen = ({navigation}: any) => {
                 size={24}
               />
             )}
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Icon
-                source={showPassword ? 'eye' : 'eye-off'}
-                color={theme.primary}
-                size={23}
-              />
-            </TouchableOpacity>
           </View>
           {!isValidPassword(password) && password.length > 0 && (
             <Text style={styles.errorText}>

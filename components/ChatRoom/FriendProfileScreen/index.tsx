@@ -87,12 +87,19 @@ export const FriendProfileScreen = ({navigation}: {navigation: any}) => {
         />
         <Text style={styles.name}>{userData?.name || 'Unknown User'}</Text>
 
-        {userData?.phoneNumber && (
+        {userData?.bio && (
+          <View style={styles.phoneContainer}>
+            <Icon name="badge-account" size={18} color="#666" />
+            <Text style={styles.phoneText}>{userData.bio}</Text>
+          </View>
+        )}
+
+        {/* {userData?.phoneNumber && (
           <View style={styles.phoneContainer}>
             <Icon name="phone" size={18} color="#666" />
             <Text style={styles.phoneText}>{userData.phoneNumber}</Text>
           </View>
-        )}
+        )} */}
       </View>
 
       <View style={styles.actionButtonsContainer}>

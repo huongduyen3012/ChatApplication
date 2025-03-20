@@ -88,7 +88,6 @@ const LoginPage = ({navigation}: any) => {
       );
       const userId = userCredential.user.uid;
 
-      // Check if user exists in your database
       const userSnapshot = await database()
         .ref(`users/${userId}`)
         .once('value');
@@ -100,7 +99,7 @@ const LoginPage = ({navigation}: any) => {
             name: user.name || userCredential.user.displayName || 'User',
             email: user.email || userCredential.user.email,
             imageUrl:
-              user.photo ||
+              user.imageUrl ||
               userCredential.user.photoURL ||
               'https://via.placeholder.com/50',
             phoneNumber: userCredential.user.phoneNumber || '',
@@ -138,30 +137,6 @@ const LoginPage = ({navigation}: any) => {
       Alert.alert('Error', 'Something went wrong');
     }
   };
-  // const onFacebookButtonPress = async () => {
-  //   try {
-  //     const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-  //     if (result.isCancelled) {
-  //       Alert.alert('Cancelled', 'Facebook login was cancelled');
-  //       return;
-  //     }
-
-  //     const data = await AccessToken.getCurrentAccessToken();
-  //     if (!data) {
-  //       throw new Error('Something went wrong obtaining access token');
-  //     }
-
-  //     const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
-  //     const userCredential = await auth().signInWithCredential(facebookCredential);
-
-  //     console.log('Signed in with Facebook:', userCredential.user);
-  //     Alert.alert('Success', 'Signed in with Facebook!');
-  //     navigation.replace('MainTabs');
-  //   } catch (error) {
-  //     console.error('Facebook Sign-In Error:', error);
-  //     Alert.alert('Error', 'Facebook Sign-In failed');
-  //   }
-  // };
 
   return (
     <ScrollView

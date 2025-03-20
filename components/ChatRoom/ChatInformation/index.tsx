@@ -272,7 +272,6 @@ export function ChatInfoScreen({navigation}: {navigation: any}) {
           }),
         );
 
-        console.log('Group members loaded:', membersArray.length); // Add this debug log
         setGroupMembers(membersArray);
 
         if (currentUser) {
