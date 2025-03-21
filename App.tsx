@@ -213,9 +213,9 @@ export default function App() {
           <Stack.Screen
             name="ForgotPassword"
             options={{title: 'Back to Login'}}>
-            {props => (
+            {() => (
               <Suspense fallback={<LoadingComponent />}>
-                <ForgotPasswordScreen {...props} />
+                <ForgotPasswordScreen />
               </Suspense>
             )}
           </Stack.Screen>

@@ -8,9 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
-import {Text, HelperText, Portal, Snackbar, Provider} from 'react-native-paper';
+import {Text, HelperText, Portal, Snackbar, Provider, TextInput} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import auth from '@react-native-firebase/auth';
 import theme from '../../../constants/Theme';
@@ -81,9 +80,7 @@ const ForgotPasswordScreen = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidView}>
-        <ScrollView
-          contentContainerStyle={styles.scrollView}
-          keyboardShouldPersistTaps="handled">
+        <ScrollView keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
             <View style={styles.formContainer}>
               <Text style={styles.title}>Forgot password?</Text>
@@ -105,7 +102,6 @@ const ForgotPasswordScreen = () => {
                 />
                 {email.length > 0 && (
                   <Icon
-                    source={isValidEmail ? 'check-circle' : 'close-circle'}
                     name={isValidEmail ? 'check-circle' : 'close-circle'}
                     color={isValidEmail ? theme.success : theme.error}
                     size={24}

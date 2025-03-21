@@ -64,7 +64,7 @@ export function EditProfileScreen() {
           setProfileImage(userData.imageUrl || null);
         }
       } catch (err) {
-        console.error('Error fetching user data:', err);
+        Alert.alert('Error', 'Failed to load profile data');
         setError('Failed to load profile data');
       } finally {
         setInitialLoading(false);
@@ -95,7 +95,6 @@ export function EditProfileScreen() {
         }
       }
     } catch (err) {
-      console.error('Error selecting image:', err);
       Alert.alert('Error', 'Failed to select image');
     }
   };

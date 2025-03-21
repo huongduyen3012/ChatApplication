@@ -40,13 +40,11 @@ const LoginPage = ({navigation}: any) => {
         password,
       );
 
-      // Check if user info exists in database
       const userSnapshot = await database()
         .ref(`users/${userCredential.user.uid}`)
         .once('value');
 
       if (!userSnapshot.exists()) {
-        // If user info doesn't exist, create it
         await database()
           .ref(`users/${userCredential.user.uid}`)
           .set({
@@ -60,7 +58,7 @@ const LoginPage = ({navigation}: any) => {
       Alert.alert('Success', 'Log in successfully, welcome!');
       navigation.replace('MainTabs');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Email or Password is incorrect');
+      Alert.alert('Error', 'Email or Password is incorrect');
     }
     setLoading(false);
   };
@@ -99,9 +97,7 @@ const LoginPage = ({navigation}: any) => {
             name: user.name || userCredential.user.displayName || 'User',
             email: user.email || userCredential.user.email,
             imageUrl:
-              user.imageUrl ||
-              userCredential.user.photoURL ||
-              'https://via.placeholder.com/50',
+              userCredential.user.photoURL || 'https://via.placeholder.com/50',
             phoneNumber: userCredential.user.phoneNumber || '',
             createdAt: database.ServerValue.TIMESTAMP,
           });
